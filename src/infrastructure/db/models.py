@@ -1,167 +1,91 @@
-from datetime import datetime
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import (
-    BigInteger,
-    String,
-    SmallInteger,
     Integer,
-    Text,
+    String,
     ForeignKey,
     UniqueConstraint,
-    Index,
-    Boolean,
-    TIMESTAMP,
 )
-from sqlalchemy.dialects.postgresql import JSONB
-from typing import Optional
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 
 class Base(DeclarativeBase):
     pass
 
-class TgUser(Base):
-    __tablename__ = "tg_users"
+
+# ================= USERS =================
+
+class User(Base):
+    __tablename__ = "users"
+
+    tg_user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    vk_access_token: Mapped[str | None]
+    vk_user_id: Mapped[int | None]
+
+    filter_city_name: Mapped[str | None]
+    filter_city_id: Mapped[int | None]
+    filter_gender: Mapped[int | None]
+    filter_age_from: Mapped[int | None]
+    filter_age_to: Mapped[int | None]
+
+    history_cursor: Mapped[int] = mapped_column(default=0)
 
 
-    tg_user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    vk_access_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    vk_user_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    filter_city_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    filter_gender: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
-    filter_age_from: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
-    filter_age_to: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+# ================= QUEUE =================
 
-    history_cursor: Mapped[int] = mapped_column(Integer, default=0)
+class QueueItem(Base):
+    __tablename__ = "queue"
 
-class VkProfile(Base):
-    __tablename__ = "vk_profiles"
-
-    vk_user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    first_name: Mapped[Optional[str]] = mapped_column(String(128))
-    last_name: Mapped[Optional[str]] = mapped_column(String(128))
-    profile_url: Mapped[Optional[str]] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(String(16), default="new")
-    found_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tg_user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_user_id"))
+    vk_profile_id: Mapped[int]
+    position: Mapped[int]
 
 
-
-class SearchQueue(Base):
-    __tablename__ = "search_queue"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-
-    tg_user_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("tg_users.tg_user_id", ondelete="CASCADE"),
-    )
-
-    vk_profile_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("vk_profiles.vk_user_id"),
-    )
-
-    __table_args__ = (
-        UniqueConstraint("tg_user_id", "vk_profile_id"),
-        Index("idx_search_queue_user_position", "tg_user_id", "position"),
-    )
-
-class ViewHistory(Base):
-    __tablename__ = "view_history"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-
-    tg_user_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("tg_users.tg_user_id", ondelete="CASKADE"),
-    )
-
-    vk_profile_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("vk_profiles.vk_user_id"),
-    )
-
-    __table_args__ = (
-        UniqueConstraint("tg_user_id", "position"),
-    )
-
-    photo_attachments: Mapped[Optional[str]] = mapped_column(Text)
-    position: Mapped[int] = mapped_column(Integer, nullable=False)
+# ================= FAVORITES =================
 
 class FavoriteProfile(Base):
-    __tablename__ = "favorite_profiles"
+    __tablename__ = "favorites"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-
-    tg_user_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("tg_users.tg_user_id"),
-    )
-
-    vk_profile_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("vk_profiles.vk_profile_id"),
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tg_user_id: Mapped[int]
+    vk_profile_id: Mapped[int]
 
     __table_args__ = (
         UniqueConstraint("tg_user_id", "vk_profile_id"),
-        Index("idx_favorites_user", "tg_user_id"),
     )
 
 
-class BlacklistProfile(Base):
-    __tablename__ = "blacklist_profiles"
+# ================= BLACKLIST =================
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+class Blacklist(Base):
+    __tablename__ = "blacklist"
 
-    tg_user_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("tg_users.tg_user_id", ondelete="CASCADE"),
-    )
-
-    vk_profile_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("vk_profiles.vk_user_id", ondelete="CASCADE"),
-    )
-
-    __table_args__ = (
-        UniqueConstraint("tg_user_id", "vk_profile_id"),
-        Index("idx_blacklist_user", "tg_user_id"),
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tg_user_id: Mapped[int]
+    vk_profile_id: Mapped[int]
 
 
-class VkPhoto(Base):
-    __tablename__ = "vk_photos"
+# ================= PROFILES =================
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+class Profile(Base):
+    __tablename__ = "profiles"
 
-    vk_user_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("vk_profiles.vk_user_id", ondelete="CASCADE"),
-    )
+    vk_user_id: Mapped[int] = mapped_column(primary_key=True)
+    first_name: Mapped[str]
+    last_name: Mapped[str]
+    domain: Mapped[str]
 
-    vk_photo_id: Mapped[int] = mapped_column(BigInteger)
 
-    likes_count: Mapped[int] = mapped_column(Integer, default=0)
-    file_path: Mapped[Optional[str]] = mapped_column(Text)
-    downloaded_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP)
+class Photo(Base):
+    __tablename__ = "photos"
 
-    status: Mapped[str] = mapped_column(String(16), default="raw")
-    reject_reason: Mapped[Optional[str]] = mapped_column(String(32))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vk_user_id: Mapped[int] = mapped_column(ForeignKey("profiles.vk_user_id"))
 
-    faces_count: Mapped[Optional[int]] = mapped_column(SmallInteger)
-    det_score: Mapped[Optional[float]] = mapped_column()
-    bbox: Mapped[Optional[dict]] = mapped_column(JSONB)
-    blur_score: Mapped[Optional[float]] = mapped_column()
+    photo_id: Mapped[int]
+    owner_id: Mapped[int]
+    url: Mapped[str]
+    likes_count: Mapped[int]
 
-    embedding: Mapped[Optional[bytes]] = mapped_column()
-    embedding_normed: Mapped[bool] = mapped_column(Boolean, default=False)
-
-    model_name: Mapped[Optional[str]] = mapped_column(String(64))
-    model_version: Mapped[Optional[str]] = mapped_column(String(32))
-
-    processed_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP)
-
-    __table_args__ = (
-        UniqueConstraint("vk_user_id", "vk_photo_id"),
-        Index("idx_vk_photos_user", "vk_user_id"),
-        Index("idx_vk_photos_status", "status"),
-    )
+    local_path: Mapped[str | None]
+    status: Mapped[str | None]
