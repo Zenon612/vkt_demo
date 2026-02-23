@@ -1,5 +1,3 @@
-# Developer B – Database Layer
-
 ## Реализовано:
 
 - Async SQLAlchemy
