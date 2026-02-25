@@ -1,5 +1,6 @@
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.infrastructure.db.repositories.interfaces import UserRepository
 
 from src.infrastructure.db.models import (
     User,
@@ -11,7 +12,7 @@ from src.infrastructure.db.models import (
 )
 
 from src.infrastructure.db.schemas.dto import UserDTO, ProfileDTO, PhotoDTO
-from interfaces import UserRepository
+
 
 
 class PostgresUserRepository(UserRepository):

@@ -13,13 +13,6 @@
 - Alembic migrations
 - Async tests
 
-## Архитектура
-
-scr/
-  /infrastructure/
-    db/
-    repositories/
-    schemas/
 
 ## Запуск
 
@@ -27,3 +20,6 @@ scr/
 2. Указать DATABASE_URL
 3. alembic upgrade head
 4. pytest
+
+### 
+- Это демо версия кода для проекта, в котором я участвую, полная версия доступна по [ссылке](https://github.com/Igor-gmc/tinder-vk-telegram)

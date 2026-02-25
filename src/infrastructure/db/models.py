@@ -1,9 +1,4 @@
-from sqlalchemy import (
-    Integer,
-    String,
-    ForeignKey,
-    UniqueConstraint,
-)
+from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -18,16 +13,16 @@ class User(Base):
 
     tg_user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    vk_access_token: Mapped[str | None]
-    vk_user_id: Mapped[int | None]
+    vk_access_token: Mapped[str | None] = mapped_column(String, nullable=True)
+    vk_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    filter_city_name: Mapped[str | None]
-    filter_city_id: Mapped[int | None]
-    filter_gender: Mapped[int | None]
-    filter_age_from: Mapped[int | None]
-    filter_age_to: Mapped[int | None]
+    filter_city_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    filter_city_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    filter_gender: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    filter_age_from: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    filter_age_to: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    history_cursor: Mapped[int] = mapped_column(default=0)
+    history_cursor: Mapped[int] = mapped_column(Integer, default=0)
 
 
 # ================= QUEUE =================
@@ -35,10 +30,13 @@ class User(Base):
 class QueueItem(Base):
     __tablename__ = "queue"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    tg_user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_user_id"))
-    vk_profile_id: Mapped[int]
-    position: Mapped[int]
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.tg_user_id")
+    )
+    vk_profile_id: Mapped[int] = mapped_column(Integer)
+    position: Mapped[int] = mapped_column(Integer)
 
 
 # ================= FAVORITES =================
@@ -46,9 +44,9 @@ class QueueItem(Base):
 class FavoriteProfile(Base):
     __tablename__ = "favorites"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    tg_user_id: Mapped[int]
-    vk_profile_id: Mapped[int]
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_user_id: Mapped[int] = mapped_column(Integer)
+    vk_profile_id: Mapped[int] = mapped_column(Integer)
 
     __table_args__ = (
         UniqueConstraint("tg_user_id", "vk_profile_id"),
@@ -60,9 +58,9 @@ class FavoriteProfile(Base):
 class Blacklist(Base):
     __tablename__ = "blacklist"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    tg_user_id: Mapped[int]
-    vk_profile_id: Mapped[int]
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_user_id: Mapped[int] = mapped_column(Integer)
+    vk_profile_id: Mapped[int] = mapped_column(Integer)
 
 
 # ================= PROFILES =================
@@ -70,22 +68,25 @@ class Blacklist(Base):
 class Profile(Base):
     __tablename__ = "profiles"
 
-    vk_user_id: Mapped[int] = mapped_column(primary_key=True)
-    first_name: Mapped[str]
-    last_name: Mapped[str]
-    domain: Mapped[str]
+    vk_user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    first_name: Mapped[str] = mapped_column(String)
+    last_name: Mapped[str] = mapped_column(String)
+    domain: Mapped[str] = mapped_column(String)
 
 
 class Photo(Base):
     __tablename__ = "photos"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    vk_user_id: Mapped[int] = mapped_column(ForeignKey("profiles.vk_user_id"))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    vk_user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("profiles.vk_user_id")
+    )
 
-    photo_id: Mapped[int]
-    owner_id: Mapped[int]
-    url: Mapped[str]
-    likes_count: Mapped[int]
+    photo_id: Mapped[int] = mapped_column(Integer)
+    owner_id: Mapped[int] = mapped_column(Integer)
+    url: Mapped[str] = mapped_column(String)
+    likes_count: Mapped[int] = mapped_column(Integer)
 
-    local_path: Mapped[str | None]
-    status: Mapped[str | None]
+    local_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    status: Mapped[str | None] = mapped_column(String, nullable=True)
